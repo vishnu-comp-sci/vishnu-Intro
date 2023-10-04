@@ -1,0 +1,100 @@
+
+Conversation with Bard
+profile picture
+Write a c++ program for port forwarding
+
+Here is a simple C++ program for port forwarding:
+
+C++
+#include <iostream>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <stdlib.h>
+
+using namespace std;
+
+int main(int argc, char *argv[]) {
+  // Get the port numbers to forward
+  int src_port = atoi(argv[1]);
+  int dst_port = atoi(argv[2]);
+
+  // Create two sockets
+  int src_socket = socket(AF_INET, SOCK_STREAM, 0);
+  if (src_socket < 0) {
+    cerr << "Error creating source socket" << endl;
+    exit(1);
+  }
+
+  int dst_socket = socket(AF_INET, SOCK_STREAM, 0);
+  if (dst_socket < 0) {
+    cerr << "Error creating destination socket" << endl;
+    exit(1);
+  }
+
+  // Bind the source socket to the specified port
+  sockaddr_in src_addr;
+  src_addr.sin_family = AF_INET;
+  src_addr.sin_port = htons(src_port);
+  src_addr.sin_addr.s_addr = INADDR_ANY;
+
+  if (bind(src_socket, (sockaddr *)&src_addr, sizeof(src_addr)) < 0) {
+    cerr << "Error binding source socket" << endl;
+    exit(1);
+  }
+
+  // Listen for incoming connections on the source socket
+  if (listen(src_socket, 1) < 0) {
+    cerr << "Error listening on source socket" << endl;
+    exit(1);
+  }
+
+  // Accept an incoming connection on the source socket
+  sockaddr_in cli_addr;
+  socklen_t cli_len = sizeof(cli_addr);
+
+  int cli_socket = accept(src_socket, (sockaddr *)&cli_addr, &cli_len);
+  if (cli_socket < 0) {
+    cerr << "Error accepting connection on source socket" << endl;
+    exit(1);
+  }
+
+  // Connect the destination socket to the specified port
+  sockaddr_in dst_addr;
+  dst_addr.sin_family = AF_INET;
+  dst_addr.sin_port = htons(dst_port);
+  dst_addr.sin_addr.s_addr = inet_addr(argv[3]);
+
+  if (connect(dst_socket, (sockaddr *)&dst_addr, sizeof(dst_addr)) < 0) {
+    cerr << "Error connecting destination socket" << endl;
+    exit(1);
+  }
+
+  // Forward data between the two sockets
+  char buf[1024];
+  int r, i, j;
+
+  while ((r = read(cli_socket, buf, 1024)) > 0) {
+    i = 0;
+    while (i < r) {
+      j = write(dst_socket, buf + i, r - i);
+      if (j == -1) {
+        cerr << "Error writing to destination socket" << endl;
+        exit(1);
+      }
+      i += j;
+    }
+  }
+
+  if (r == -1) {
+    cerr << "Error reading from client socket" << endl;
+    exit(1);
+  }
+
+  // Close the sockets
+  close(src_socket);
+  close(dst_socket);
+  close(cli_socket);
+
+  return 0;
+}
