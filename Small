@@ -1,0 +1,4 @@
+if (bind(src_socket, (sockaddr *)&src_addr) < 0) {
+  cerr << "Error binding source socket" << endl;
+  exit(1);
+}
