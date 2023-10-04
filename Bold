@@ -1,0 +1,17 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <libsocket/socket.h>
+
+int main() {
+  // Create a socket
+  int sock = socket(AF_INET, SOCK_STREAM, 0);
+  if (sock < 0) {
+    perror("socket");
+    exit(1);
+  }
+
+  // Close the socket
+  close(sock);
+
+  return 0;
+}
